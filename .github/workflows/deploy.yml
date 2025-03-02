@@ -1,0 +1,30 @@
+name: Deploy Flask App with Ansible
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Ansible
+        run: sudo apt update && sudo apt install -y ansible
+
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook -i "ec2-user@${{ secrets.EC2_PUBLIC_IP }}," \
+            --private-key <(echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode) \
+            flask-app/deploy_flask.yml
+
+      - name: Verify Application is Running
+        run: |
+          ssh -o StrictHostKeyChecking=no -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode) ec2-user@${{ secrets.EC2_PUBLIC_IP }} "
+          docker ps | grep my-flask-app || (echo 'Container is not running!' && exit 1)"
