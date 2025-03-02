@@ -18,7 +18,18 @@ jobs:
           sudo apt update
           sudo apt install -y ansible unzip python3-pip
 
-          # Ensure boto3 and botocore are installed
+          # Find Ansible's Python path
+          ANSIBLE_PYTHON_PATH=$(ansible --version | grep "python version" | awk '{print $4}')
+          echo "Ansible is using Python at: $ANSIBLE_PYTHON_PATH"
+          
+          # Get the directory of Ansible's Python
+          ANSIBLE_PYTHON_DIR=$(dirname $ANSIBLE_PYTHON_PATH)
+          echo "Ansible Python directory: $ANSIBLE_PYTHON_DIR"
+          
+          # Install boto3 using Ansible's pip
+          sudo $ANSIBLE_PYTHON_DIR/pip install boto3 botocore
+          
+          # Also install in the system Python for good measure
           pip3 install boto3 botocore
 
           # Check AWS CLI installation & update if needed
