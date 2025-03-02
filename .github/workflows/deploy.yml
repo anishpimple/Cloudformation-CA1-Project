@@ -50,4 +50,4 @@ jobs:
 
       - name: Run Ansible Playbook using AWS SSM
         run: |
-          ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml
+          ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml --extra-vars "ansible_python_interpreter=/usr/bin/python3"
