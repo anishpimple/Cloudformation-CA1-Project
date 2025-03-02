@@ -17,7 +17,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y ansible unzip
-          
+
           # Check if AWS CLI is already installed
           if aws --version > /dev/null 2>&1; then
             echo "AWS CLI already installed. Updating..."
@@ -36,9 +36,13 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
+          aws-region: eu-west-1  # Change to your AWS region
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
           role-session-name: GitHubActionsSession
-          aws-region: eu-west-1  # Change to your AWS region
+          role-duration-seconds: 1200 # Optional: Set session duration
+
+      - name: Debug AWS Credentials
+        run: aws sts get-caller-identity
 
       - name: Verify AWS SSM Access
         run: aws ssm describe-instance-information
