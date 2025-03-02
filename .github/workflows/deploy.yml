@@ -1,4 +1,4 @@
-name: Deploy Flask App with Ansible
+name: Deploy Flask App
 
 on:
   push:
@@ -16,15 +16,12 @@ jobs:
       - name: Install Ansible
         run: sudo apt update && sudo apt install -y ansible
 
-      - name: Run Ansible Playbook
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "False"
+      - name: Debug SSH Connection
         run: |
-          ansible-playbook -i "ec2-user@${{ secrets.EC2_PUBLIC_IP }}," \
-            --private-key <(echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode) \
-            flask-app/deploy_flask.yml
+          echo "Testing SSH connection..."
+          ssh -i /home/runner/.ssh/Security-key.pem -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_HOST }} "echo 'SSH Connection Successful'"
 
-      - name: Verify Application is Running
+      - name: Run Ansible Playbook
         run: |
-          ssh -o StrictHostKeyChecking=no -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode) ec2-user@${{ secrets.EC2_PUBLIC_IP }} "
-          docker ps | grep my-flask-app || (echo 'Container is not running!' && exit 1)"
+          ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml
+
