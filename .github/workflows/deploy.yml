@@ -13,15 +13,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Install Ansible
-        run: sudo apt update && sudo apt install -y ansible
-
-      - name: Debug SSH Connection
+      - name: Install Ansible & AWS CLI
         run: |
-          echo "Testing SSH connection..."
-          ssh -i /home/runner/.ssh/Security-key.pem -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_HOST }} "echo 'SSH Connection Successful'"
+          sudo apt update
+          sudo apt install -y ansible awscli
 
-      - name: Run Ansible Playbook
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
+          role-session-name: GitHubActionsSession
+          aws-region: eu-west-1  # Change to your AWS region
+
+      - name: Verify AWS SSM Access
+        run: aws ssm describe-instance-information
+
+      - name: Run Ansible Playbook using AWS SSM
         run: |
           ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml
-
