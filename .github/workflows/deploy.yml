@@ -17,8 +17,6 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y ansible unzip
-
-          # Check if AWS CLI is already installed
           if aws --version > /dev/null 2>&1; then
             echo "AWS CLI already installed. Updating..."
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -30,17 +28,20 @@ jobs:
             unzip awscliv2.zip
             sudo ./aws/install
           fi
+          aws --version
 
-          aws --version  # Verify installation
+      - name: Debug AWS Secrets
+        run: |
+          echo "AWS Account ID: ${{ secrets.AWS_ACCOUNT_ID }}"
+          echo "Role ARN: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsRole"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
+          role-to-assume: arn:aws:iam::156507000928:role/GitHubActionsRole #arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
           role-session-name: GitHubActionsSession
-          aws-region: eu-west-1  # Change to your AWS region
+          aws-region: eu-west-1
 
-      # Debugging Step 2: Verify IAM Role Assumption
       - name: Verify AWS Credentials
         run: aws sts get-caller-identity
 
@@ -48,5 +49,4 @@ jobs:
         run: aws ssm describe-instance-information
 
       - name: Run Ansible Playbook using AWS SSM
-        run: |
-          ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml
+        run: ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml
