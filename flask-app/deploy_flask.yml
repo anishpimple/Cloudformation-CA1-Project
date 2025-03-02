@@ -8,9 +8,15 @@
       yum:
         name:
           - python3
-          - python3-pip # Required for Flask app
+          - python3-pip  # Required for Flask app
         state: present
         update_cache: yes
+
+    - name: Ensure boto3 is installed on EC2
+      pip:
+        name: boto3
+        state: present
+        executable: pip3
 
     - name: Start Docker service
       service:
