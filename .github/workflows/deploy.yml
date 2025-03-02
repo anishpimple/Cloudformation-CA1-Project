@@ -36,12 +36,12 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-region: eu-west-1  # Change to your AWS region
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
           role-session-name: GitHubActionsSession
-          role-duration-seconds: 1200 # Optional: Set session duration
+          aws-region: eu-west-1  # Change to your AWS region
 
-      - name: Debug AWS Credentials
+      # Debugging Step 2: Verify IAM Role Assumption
+      - name: Verify AWS Credentials
         run: aws sts get-caller-identity
 
       - name: Verify AWS SSM Access
