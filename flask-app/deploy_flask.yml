@@ -2,6 +2,8 @@
 - name: Deploy Flask App in Docker
   hosts: webserver
   become: yes  # Run as sudo/root
+  vars:
+    ansible_python_interpreter: /usr/bin/python3  # Ensure Python3 interpreter
 
   tasks:
     - name: Install required system packages
@@ -12,11 +14,11 @@
         state: present
         update_cache: yes
 
-    - name: Ensure boto3 is installed on EC2
+    - name: Install boto3
       pip:
         name: boto3
         state: present
-        executable: pip3
+        executable: pip3  # Ensure pip3 is used to install boto3
 
     - name: Start Docker service
       service:
