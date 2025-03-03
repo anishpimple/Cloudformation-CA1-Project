@@ -18,10 +18,12 @@ jobs:
           sudo apt update
           sudo apt install -y ansible python3-pip
           
-          # Find Ansible's Python path and install boto3 there
+          # Find Ansible's Python path
           ANSIBLE_PYTHON_PATH="/opt/pipx/venvs/ansible-core/bin/python"
           echo "Ansible is using Python at: $ANSIBLE_PYTHON_PATH"
-          sudo /opt/pipx/venvs/ansible-core/bin/pip install boto3 botocore
+          
+          # Install boto3 in Ansible's Python environment using the Python executable
+          sudo $ANSIBLE_PYTHON_PATH -m pip install boto3 botocore
           
           # Also install boto3 in the system Python
           pip3 install boto3 botocore
@@ -50,4 +52,5 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml -v
+          # Add verbose output to help with debugging
+          ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml -vvv
