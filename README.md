@@ -44,6 +44,7 @@ Store your AWS credentials as GitHub secrets:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_REGION`
+- 'EC2_PUBLIC_IP'
 
 Also, create an SSH key for deployment and add it as `SSH_PRIVATE_KEY` in your GitHub secrets.
 
