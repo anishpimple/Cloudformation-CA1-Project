@@ -18,7 +18,12 @@ jobs:
           sudo apt update
           sudo apt install -y ansible python3-pip
           
-          # Install boto3 in system Python
+          # Find Ansible's Python path and install boto3 there
+          ANSIBLE_PYTHON_PATH="/opt/pipx/venvs/ansible-core/bin/python"
+          echo "Ansible is using Python at: $ANSIBLE_PYTHON_PATH"
+          sudo /opt/pipx/venvs/ansible-core/bin/pip install boto3 botocore
+          
+          # Also install boto3 in the system Python
           pip3 install boto3 botocore
           
           # Install AWS collections for Ansible
@@ -38,12 +43,6 @@ jobs:
           # Create updated inventory file
           echo "[webserver]" > NetworkSec.ini
           echo "54.76.163.1 ansible_connection=aws_ssm ansible_aws_ssm_region=${{ secrets.AWS_REGION }} ansible_user=ec2-user ansible_python_interpreter=/usr/bin/python3" >> NetworkSec.ini
-          
-          # Display created files for debugging
-          echo "Created ansible.cfg:"
-          cat ansible.cfg
-          echo "Created NetworkSec.ini:"
-          cat NetworkSec.ini
 
       - name: Run Ansible Playbook
         env:
