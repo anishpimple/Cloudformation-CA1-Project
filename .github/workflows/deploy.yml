@@ -16,18 +16,13 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y ansible unzip python3-pip
+          sudo apt install -y ansible python3-pip
           
           # Install boto3 in system Python
           pip3 install boto3 botocore
           
           # Install AWS collections for Ansible
           ansible-galaxy collection install amazon.aws
-          
-          # Install AWS CLI
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
 
       - name: Configure AWS CLI
         run: |
@@ -35,38 +30,22 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws configure set region ${{ secrets.AWS_REGION }}
 
-      - name: Verify AWS Credentials
-        run: aws sts get-caller-identity
-
-      - name: Verify AWS SSM Access
-        run: aws ssm describe-instance-information
-
       - name: Create Ansible Config for AWS
         run: |
-          cat > ansible.cfg << EOF
-          [defaults]
-          host_key_checking = False
+          echo "[defaults]" > ansible.cfg
+          echo "host_key_checking = False" >> ansible.cfg
           
-          [inventory]
-          enable_plugins = amazon.aws.aws_ec2
+          # Create updated inventory file
+          echo "[webserver]" > NetworkSec.ini
+          echo "54.76.163.1 ansible_connection=aws_ssm ansible_aws_ssm_region=${{ secrets.AWS_REGION }} ansible_user=ec2-user ansible_python_interpreter=/usr/bin/python3" >> NetworkSec.ini
           
-          [ssh_connection]
-          scp_if_ssh = True
-          
-          [galaxy]
-          server_list = release_galaxy
-          
-          [galaxy_server.release_galaxy]
-          url = https://galaxy.ansible.com/
-          EOF
-          
-          # Update NetworkSec.ini with the correct region
-          cat > NetworkSec.ini << EOF
-          [webserver]
-          54.76.163.1 ansible_connection=aws_ssm ansible_aws_ssm_region=${{ secrets.AWS_REGION }} ansible_user=ec2-user ansible_python_interpreter=/usr/bin/python3
-          EOF
+          # Display created files for debugging
+          echo "Created ansible.cfg:"
+          cat ansible.cfg
+          echo "Created NetworkSec.ini:"
+          cat NetworkSec.ini
 
-      - name: Run Ansible Playbook using AWS SSM
+      - name: Run Ansible Playbook
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
