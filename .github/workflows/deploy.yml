@@ -13,44 +13,22 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Install Dependencies
+      - name: Set up SSH key
         run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 54.76.163.1 >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        run: |
+          # Create a simple inventory file for SSH connection
+          echo "[webserver]" > inventory.ini
+          echo "54.76.163.1 ansible_user=ec2-user" >> inventory.ini
+          
+          # Install Ansible
           sudo apt update
-          sudo apt install -y ansible python3-pip
+          sudo apt install -y ansible
           
-          # Find Ansible's Python path
-          ANSIBLE_PYTHON_PATH="/opt/pipx/venvs/ansible-core/bin/python"
-          echo "Ansible is using Python at: $ANSIBLE_PYTHON_PATH"
-          
-          # Install boto3 in Ansible's Python environment using the Python executable
-          sudo $ANSIBLE_PYTHON_PATH -m pip install boto3 botocore
-          
-          # Also install boto3 in the system Python
-          pip3 install boto3 botocore
-          
-          # Install AWS collections for Ansible
-          ansible-galaxy collection install amazon.aws
-
-      - name: Configure AWS CLI
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set region ${{ secrets.AWS_REGION }}
-
-      - name: Create Ansible Config for AWS
-        run: |
-          echo "[defaults]" > ansible.cfg
-          echo "host_key_checking = False" >> ansible.cfg
-          
-          # Create updated inventory file
-          echo "[webserver]" > NetworkSec.ini
-          echo "54.76.163.1 ansible_connection=aws_ssm ansible_aws_ssm_region=${{ secrets.AWS_REGION }} ansible_user=ec2-user ansible_python_interpreter=/usr/bin/python3" >> NetworkSec.ini
-
-      - name: Run Ansible Playbook
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          # Add verbose output to help with debugging
-          ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml -vvv
+          # Run the Ansible playbook
+          ansible-playbook -i inventory.ini flask-app/deploy_flask.yml -v
