@@ -17,21 +17,17 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y ansible unzip python3-pip
-
-          # Find Ansible's Python path
-          ANSIBLE_PYTHON_PATH=$(ansible --version | grep "python version" | awk '{print $4}')
-          echo "Ansible is using Python at: $ANSIBLE_PYTHON_PATH"
           
-          # Get the directory of Ansible's Python
-          ANSIBLE_PYTHON_DIR=$(dirname $ANSIBLE_PYTHON_PATH)
-          echo "Ansible Python directory: $ANSIBLE_PYTHON_DIR"
-          
-          # Install boto3 using Ansible's pip
-          sudo $ANSIBLE_PYTHON_DIR/pip install boto3 botocore
-          
-          # Also install in the system Python for good measure
+          # Directly install boto3 in multiple locations to ensure it's available
+          # System Python
           pip3 install boto3 botocore
-
+          
+          # Install for Ansible's Python (using direct path)
+          sudo $(which python3) -m pip install boto3 botocore
+          
+          # Install ansible boto collections
+          ansible-galaxy collection install amazon.aws
+          
           # Check AWS CLI installation & update if needed
           if aws --version > /dev/null 2>&1; then
             echo "AWS CLI already installed. Updating..."
@@ -59,6 +55,12 @@ jobs:
       - name: Verify AWS SSM Access
         run: aws ssm describe-instance-information
 
+      - name: Set Python Path for Ansible
+        run: |
+          echo "PYTHONPATH=/usr/local/lib/python3.8/dist-packages:/usr/lib/python3/dist-packages" >> $GITHUB_ENV
+
       - name: Run Ansible Playbook using AWS SSM
+        env:
+          PYTHONPATH: /usr/local/lib/python3.8/dist-packages:/usr/lib/python3/dist-packages
         run: |
           ansible-playbook -i NetworkSec.ini flask-app/deploy_flask.yml --extra-vars "ansible_python_interpreter=/usr/bin/python3"
