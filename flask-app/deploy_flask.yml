@@ -2,9 +2,21 @@
 - name: Deploy Flask App in Docker
   hosts: webserver
   become: yes  # Run as sudo/root
-  vars:
-    ansible_python_interpreter: /usr/bin/python3  # Ensure Python3 interpreter
-
+  gather_facts: no  # Skip initial fact gathering which would use the wrong Python
+  
+  pre_tasks:
+    - name: Set Python 3.8 as interpreter
+      raw: which python3.8
+      register: python_path
+      changed_when: false
+      
+    - name: Set Python for Ansible
+      set_fact:
+        ansible_python_interpreter: "{{ python_path.stdout_lines[0] }}"
+      
+    - name: Gather facts with correct Python
+      setup:
+  
   tasks:
     - name: Install required system packages
       yum:
