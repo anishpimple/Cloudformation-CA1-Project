@@ -20,15 +20,16 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.76.163.1 >> ~/.ssh/known_hosts
 
-      - name: Deploy to EC2
+      - name: Install Ansible
         run: |
-          # Create inventory file specifying Python 3.8
-          echo "[webserver]" > inventory.ini
-          echo "54.76.163.1 ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3.8" >> inventory.ini
-          
-          # Install Ansible
           sudo apt update
           sudo apt install -y ansible
+
+      - name: Run deployment
+        run: |
+          # Create inventory file
+          echo "[webserver]" > inventory.ini
+          echo "54.76.163.1 ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa" >> inventory.ini
           
-          # Run the Ansible playbook
+          # Run Ansible playbook
           ansible-playbook -i inventory.ini flask-app/deploy_flask.yml -v
