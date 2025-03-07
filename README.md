@@ -1,192 +1,154 @@
 # Automated Flask Application Deployment
 
-This project demonstrates an automated cloud deployment pipeline for a containerized Flask application using AWS CloudFormation, Ansible, Docker, and GitHub Actions. The implementation provides a complete end-to-end automation solution from infrastructure provisioning to continuous deployment.
+This project demonstrates an automated deployment pipeline for a containerized Flask application using AWS CloudFormation, Ansible, Docker, and GitHub Actions. The implementation provides a complete end-to-end automation solution from infrastructure provisioning to continuous deployment.
 
 ## Project Overview
 
-The project creates a seamless deployment pipeline with the following components:
+The goal of this project is to automate the deployment of a server running a containerized web application. The implementation follows DevOps best practices by using Infrastructure as Code (IaC) techniques, configuration management, containerization, and continuous integration/continuous deployment (CI/CD).
 
-- **Infrastructure as Code**: AWS CloudFormation for provisioning cloud resources
-- **Configuration Management**: Ansible for server configuration and application deployment
-- **Containerization**: Docker for application packaging and isolation
-- **CI/CD Pipeline**: GitHub Actions for automated deployment on code changes
+The architecture includes:
 
+1. AWS EC2 instance provisioned through CloudFormation
+2. Server configuration managed by Ansible
+3. Application containerized with Docker
+4. Continuous deployment through GitHub Actions
 
-The deployment architecture includes:
+## Components
 
-1. An EC2 instance provisioned using CloudFormation
-2. Docker installed and configured via Ansible
-3. A Flask application containerized with Docker
-4. GitHub Actions for continuous deployment
+### Infrastructure as Code
 
-## Prerequisites
+The project uses AWS CloudFormation to provision the cloud infrastructure. The CloudFormation template creates an EC2 instance with the necessary security groups to allow web and SSH traffic. This approach ensures that the infrastructure is reproducible and can be version-controlled.
 
-To use this project, you'll need:
+### Configuration Management
 
+Ansible handles the server configuration after provisioning. The Ansible playbooks install and configure Docker on the EC2 instance, ensuring that Docker starts automatically when the server boots up. This ensures consistent server configuration and reduces manual setup.
+
+### Containerization
+
+The Flask application is containerized using Docker. The Dockerfile specifies the environment, dependencies, and runtime configuration for the application. Containerization provides isolation, consistency across environments, and simplified deployment.
+
+### Continuous Integration/Continuous Deployment
+
+GitHub Actions automates the deployment process. When changes are pushed to the main branch, the GitHub Actions workflow:
+1. Connects to the EC2 instance
+2. Transfers the updated application files
+3. Rebuilds the Docker image
+4. Redeploys the container
+
+This automation ensures that the latest version of the application is always deployed with minimal manual intervention.
+
+## Setup Instructions
+
+### Prerequisites
+
+To use this project, you need:
 - An AWS account with appropriate permissions
 - A GitHub account
-- Basic knowledge of AWS, Docker, and GitHub Actions
-- Python 3.8+ installed for local development
+- Basic familiarity with AWS, Docker, and GitHub Actions
+- Python 3.8+ for local development
 
-## Getting Started
+### AWS Setup
 
-### 1. Clone the Repository
+1. Create an EC2 key pair named "Security-key" in your AWS account
+2. Create an IAM role named "EC2-CloudFormation-Role" with the necessary permissions
+3. Deploy the CloudFormation stack using the template in the repository
 
-```bash
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
-```
+### GitHub Setup
 
-### 2. Configure AWS Credentials
+1. Fork or clone this repository
+2. Add the following secrets to your GitHub repository:
+   - AWS_ACCESS_KEY_ID: Your AWS access key
+   - AWS_SECRET_ACCESS_KEY: Your AWS secret key
+   - EC2_PUBLIC_IP: Public IP of your deployed EC2 instance
+   - SSH_PRIVATE_KEY: Private key for SSH access to the EC2 instance
 
-Store your AWS credentials as GitHub secrets:
+### Local Development
 
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_REGION`
-- 'EC2_PUBLIC_IP'
+For local development and testing of the Flask application:
 
-Also, create an SSH key for deployment and add it as `SSH_PRIVATE_KEY` in your GitHub secrets.
+1. Clone the repository
+2. Navigate to the flask-app directory
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+4. Run the application:
+   ```
+   python app.py
+   ```
 
-### 3. Deploy the Infrastructure
-
-The infrastructure is deployed using the CloudFormation template:
-
-```json
-{
-  "Description": "CloudFormation script to set up an EC2 instance in AWS with Docker installed",
-  "Resources": {
-    "WebServerInstance": {
-      "Type": "AWS::EC2::Instance",
-      ...
-    }
-  }
-}
-```
-
-### 4. Update the Inventory File
-
-Update the `NetworkSec.ini` file with your EC2 instance's IP address:
-
-```ini
-[webserver]
-your-ec2-ip ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa
-```
-
-## CI/CD Pipeline
-
-The project uses GitHub Actions for continuous deployment. When code changes are pushed to the main branch, the workflow:
-
-1. Checks out the repository
-2. Sets up the SSH connection to the EC2 instance
-3. Runs Ansible playbooks to deploy the application
-
-The workflow is defined in `.github/workflows/deploy.yml`:
-
-```yaml
-name: Deploy Flask App
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-      # Workflow steps...
-```
-
-## Application Structure
+## Project Structure
 
 ```
-├── cloudformationsetup.json  # AWS CloudFormation template
-├── ConfigDocker.yml         # Ansible playbook for Docker setup
-├── flask-app/               # Flask application
-│   ├── app.py              # Main application file
-│   ├── Dockerfile          # Container definition
-│   ├── requirements.txt    # Python dependencies
-│   └── deploy_flask.yml    # Ansible deployment playbook
-├── NetworkSec.ini          # Ansible inventory
-└── .github/workflows/      # GitHub Actions workflows
-    └── deploy.yml         # Deployment workflow
+├── cloudformationsetup.json    # AWS CloudFormation template
+├── ConfigDocker.yml            # Ansible playbook for Docker setup
+├── flask-app/                  # Flask application
+│   ├── app.py                  # Main application file
+│   ├── Dockerfile              # Container definition
+│   ├── requirements.txt        # Python dependencies
+│   ├── deploy_flask.yml        # Ansible deployment playbook
+│   └── templates/              # HTML templates
+│       └── index.html          # Main page template
+├── .github/workflows/          # GitHub Actions workflows
+│   ├── deploy.yml              # Deployment workflow
+│   └── test-secrets.yml        # Test workflow for secrets
+└── README.md                   # This file
 ```
 
 ## Flask Application
 
-The application is a simple Flask web server:
+The application is a simple Flask web server that serves a static HTML page. The application:
+1. Imports Flask and render_template
+2. Creates a Flask application instance
+3. Defines a route for the home page
+4. Renders the index.html template
+5. Runs the server on port 80
 
-```python
-from flask import Flask
+## Deployment Process
 
-app = Flask(__name__)
+The deployment process follows these steps:
 
-@app.route('/')
-def home():
-    return '<h1>Hello from Flask in Docker!</h1>'
+1. Infrastructure Provisioning:
+   - CloudFormation creates an EC2 instance with security groups
+   - The instance is configured with a public IP address
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
-```
+2. Server Configuration:
+   - Ansible installs and configures Docker on the EC2 instance
+   - System packages are updated and Docker is set to start on boot
 
-## Docker Configuration
+3. Application Deployment:
+   - The Flask application files are copied to the server
+   - A Docker image is built from the Dockerfile
+   - The container is started and mapped to port 80
 
-The application is containerized using the following Dockerfile:
-
-```dockerfile
-FROM python:3.9
-WORKDIR /app
-COPY . /app
-RUN pip install --no-cache-dir -r requirements.txt
-EXPOSE 80
-CMD ["python", "app.py"]
-```
-
-## Ansible Deployment
-
-The Flask application is deployed using Ansible:
-
-```yaml
-- name: Deploy Flask App in Docker
-  hosts: webserver
-  become: yes
-  tasks:
-    # Deployment tasks...
-```
+4. Continuous Deployment:
+   - GitHub Actions workflow monitors the repository for changes
+   - When changes are detected, the workflow connects to the EC2 instance
+   - The application is redeployed automatically
 
 ## Troubleshooting
 
-### Common Issues
+Common issues and solutions:
 
-1. **Python Version Compatibility**: Ensure Python 3.8+ is installed on the EC2 instance.
-2. **SSH Connection Issues**: Verify that the SSH key permissions are correct (chmod 600) and the key is properly configured in GitHub secrets.
-3. **Container Not Starting**: Check Docker logs with `docker logs my-flask-app`.
-4. **Website Unreachable**: Ensure the EC2 security group allows inbound traffic on port 80.
-
-### Debugging Commands
-
-```bash
-# Check if container is running
-docker ps
-
-# View container logs
-docker logs my-flask-app
-
-# Test local connectivity
-curl localhost:80
-
-# Check port bindings
-sudo netstat -tulpn | grep 80
-```
+- SSH Connection Problems: Make sure the SSH key has the correct permissions (chmod 600) and the security group allows SSH traffic.
+- Docker Container Not Starting: Check Docker logs with `docker logs my-flask-app`.
+- Website Not Accessible: Verify that port 80 is open in the security group.
+- GitHub Actions Failures: Check the workflow logs for detailed error messages.
 
 ## Future Improvements
 
-- Add proper health checks after deployment
-- Implement blue-green deployment strategy
-- Add automated testing before deployment
-- Set up monitoring and alerting
-- Configure HTTPS with Let's Encrypt
-- Implement database integration
-- Add load balancing for high availability
+Potential improvements for the project:
+
+- Implementing HTTPS with SSL certificates
+- Adding monitoring and alerting
+- Setting up load balancing for high availability
+- Adding automated testing before deployment
+
+## License
+
+This project is provided for educational purposes and has no licensing you are free to clone it :)
+If this helped you in anyway then you can connect with me on linkedIn: www.linkedin.com/in/anish-pimple-0437a6aa 
+
+## Acknowledgments
+
+This project was completed as part of the Network Systems and Administration module (B9IS121).
