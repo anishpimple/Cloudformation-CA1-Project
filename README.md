@@ -51,7 +51,7 @@ To use this project, you need:
 
 To install Python 3.8 on your EC2 instance:
 
-1. Connect to your EC2 instance via SSH:
+1. Connect to your EC2 instance via SSH: OR You can directly access it from your EC2 page from AWS Console(Recommended)
    ```
    ssh -i your-key.pem ec2-user@your-instance-ip
    ```
