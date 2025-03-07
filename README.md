@@ -47,6 +47,49 @@ To use this project, you need:
 - Basic familiarity with AWS, Docker, and GitHub Actions
 - Python 3.8+ for local development
 
+**Important**: You must install Python 3.8 on your EC2 instance before running the deployment workflow. The Ansible playbook specifically looks for Python 3.8 and will fail if it's not available.
+
+To install Python 3.8 on your EC2 instance:
+
+1. Connect to your EC2 instance via SSH:
+   ```
+   ssh -i your-key.pem ec2-user@your-instance-ip
+   ```
+
+2. For Amazon Linux 2, install Python 3.8 using amazon-linux-extras:
+   ```
+   sudo amazon-linux-extras install python3.8
+   ```
+
+3. Alternatively, if the above method doesn't work, install Python 3.8 from source:
+   ```
+   # Update packages
+   sudo yum update -y
+   
+   # Install development tools
+   sudo yum groupinstall "Development Tools" -y
+   sudo yum install openssl-devel bzip2-devel libffi-devel -y
+   
+   # Download and compile Python 3.8
+   cd /opt
+   sudo wget https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz
+   sudo tar xzf Python-3.8.12.tgz
+   cd Python-3.8.12
+   sudo ./configure --enable-optimizations
+   sudo make altinstall
+   
+   # Create a symbolic link
+   sudo ln -s /usr/local/bin/python3.8 /usr/bin/python3.8
+   ```
+
+4. Verify the installation:
+   ```
+   python3.8 --version
+   which python3.8
+   ```
+
+This step is crucial because the deployment playbook specifically checks for Python 3.8 with the command `which python3.8` and will fail if it cannot find it.
+
 ### AWS Setup
 
 1. Create an EC2 key pair named "Security-key" in your AWS account
@@ -130,7 +173,6 @@ The deployment process follows these steps:
 
 Common issues and solutions:
 
-- SSH Connection Problems: Make sure the SSH key has the correct permissions (chmod 600) and the security group allows SSH traffic.
 - Docker Container Not Starting: Check Docker logs with `docker logs my-flask-app`.
 - Website Not Accessible: Verify that port 80 is open in the security group.
 - GitHub Actions Failures: Check the workflow logs for detailed error messages.
@@ -142,12 +184,13 @@ Potential improvements for the project:
 - Implementing HTTPS with SSL certificates
 - Adding monitoring and alerting
 - Setting up load balancing for high availability
+- Implementing blue-green deployment for zero-downtime updates
 - Adding automated testing before deployment
 
 ## License
 
 This project is provided for educational purposes and has no licensing you are free to clone it :)
-If this helped you in anyway then you can connect with me on linkedIn: www.linkedin.com/in/anish-pimple-0437a6aa 
+If this helped you in anyway then you can connect with me on linkedIn: www.linkedin.com/in/anish-pimple-0437a6aa
 
 ## Acknowledgments
 
