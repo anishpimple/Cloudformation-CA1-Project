@@ -44,7 +44,7 @@ This automation ensures that the latest version of the application is always dep
 To use this project, you need:
 - An AWS account with appropriate permissions
 - A GitHub account
-- Basic familiarity with AWS, Docker, and GitHub Actions
+- Basic familiarity with AWS, Docker, Ansible and GitHub Actions
 - Python 3.8+ for local development
 
 **Important**: You must install Python 3.8 on your EC2 instance before running the deployment workflow. The Ansible playbook specifically looks for Python 3.8 and will fail if it's not available.
@@ -95,6 +95,7 @@ This step is crucial because the deployment playbook specifically checks for Pyt
 1. Create an EC2 key pair named "Security-key" in your AWS account
 2. Create an IAM role named "EC2-CloudFormation-Role" with the necessary permissions
 3. Deploy the CloudFormation stack using the template in the repository
+4. Obtain an Elastic IP and associate it to the EC2 instance
 
 ### GitHub Setup
 
@@ -102,7 +103,7 @@ This step is crucial because the deployment playbook specifically checks for Pyt
 2. Add the following secrets to your GitHub repository:
    - AWS_ACCESS_KEY_ID: Your AWS access key
    - AWS_SECRET_ACCESS_KEY: Your AWS secret key
-   - EC2_PUBLIC_IP: Public IP of your deployed EC2 instance
+   - EC2_PUBLIC_IP: Public IP of your deployed EC2 instance or associated Elastic IP
    - SSH_PRIVATE_KEY: Private key for SSH access to the EC2 instance
 
 ### Local Development
@@ -134,7 +135,6 @@ For local development and testing of the Flask application:
 │       └── index.html          # Main page template
 ├── .github/workflows/          # GitHub Actions workflows
 │   ├── deploy.yml              # Deployment workflow
-│   └── test-secrets.yml        # Test workflow for secrets
 └── README.md                   # This file
 ```
 
